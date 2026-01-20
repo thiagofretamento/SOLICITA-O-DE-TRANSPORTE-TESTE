@@ -7,13 +7,21 @@ interface TransportTableProps {
   requests: TransportRequest[];
   onEdit: (request: TransportRequest) => void;
   onDelete: (id: string) => void;
+  onDuplicate: (request: TransportRequest) => void;
   onAddNew: () => void;
 }
+
+const formatDateBR = (dateStr: string) => {
+  if (!dateStr || !dateStr.includes('-')) return dateStr;
+  const [year, month, day] = dateStr.split('-');
+  return `${day}/${month}/${year}`;
+};
 
 const TransportTable: React.FC<TransportTableProps> = ({ 
   requests, 
   onEdit, 
   onDelete,
+  onDuplicate,
   onAddNew
 }) => {
   if (requests.length === 0) {
@@ -30,25 +38,31 @@ const TransportTable: React.FC<TransportTableProps> = ({
     );
   }
 
+  const visibleFieldsWithIndices = FIELDS.map((field, index) => ({ field, index, label: FIELD_LABELS[index] }))
+    .filter(({ index, field }) => {
+      const isStop = index >= 18 && index <= 23;
+      if (!isStop) return true;
+      return requests.some(req => req[field.id] && req[field.id].toString().trim() !== '');
+    });
+
   return (
     <div className="overflow-x-auto">
       <table className="w-full text-left border-collapse table-auto">
         <thead>
           <tr className="bg-slate-200 border-b-2 border-slate-300">
-            <th className="px-4 py-6 sticky left-0 z-20 bg-slate-200 border-r border-slate-300 shadow-[4px_0_10px_rgba(0,0,0,0.05)] w-[120px]">
+            <th className="px-4 py-6 sticky left-0 z-20 bg-slate-200 border-r border-slate-300 shadow-[4px_0_10px_rgba(0,0,0,0.05)] w-[160px]">
               <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest text-center block">Ações</span>
             </th>
-            {FIELD_LABELS.map((label, idx) => {
+            {visibleFieldsWithIndices.map(({ label, index }) => {
               const isSpecial = label === 'CASO O SETOR DO SOLICITANTE FOR OUTROS, INFORME AQUI' || label.startsWith('PARADA');
               return (
                 <th 
-                  key={idx} 
+                  key={index} 
                   className={`px-4 py-5 whitespace-nowrap min-w-[220px] border-r border-slate-300 ${
                     isSpecial ? 'bg-yellow-400/80' : 'bg-slate-200'
                   }`}
                 >
                   <div className="flex flex-col items-center">
-                    <span className="text-[9px] text-[#001f54] font-black opacity-40 mb-1">COLUNA {String.fromCharCode(65 + (idx % 26))}{idx >= 26 ? 'G' : ''}</span>
                     <span className={`text-[11px] font-black uppercase tracking-tighter leading-tight text-center ${isSpecial ? 'text-black' : 'text-slate-700'}`}>
                       {label}
                     </span>
@@ -59,12 +73,13 @@ const TransportTable: React.FC<TransportTableProps> = ({
           </tr>
         </thead>
         <tbody className="divide-y divide-gray-100">
-          {requests.map((request, rowIndex) => (
+          {requests.map((request) => (
             <tr key={request.id} className="hover:bg-blue-50/50 transition-colors group">
               <td className="px-4 py-4 sticky left-0 z-10 bg-white border-r border-slate-200 shadow-[4px_0_10px_rgba(0,0,0,0.03)] group-hover:bg-blue-50 transition-colors">
-                <div className="flex items-center justify-center gap-3">
+                <div className="flex items-center justify-center gap-2">
                   <button
-                    onClick={() => onEdit(request)}
+                    type="button"
+                    onClick={(e) => { e.stopPropagation(); onEdit(request); }}
                     className="p-2 text-blue-700 hover:bg-blue-100 rounded-lg transition-all"
                     title="Editar"
                   >
@@ -73,7 +88,24 @@ const TransportTable: React.FC<TransportTableProps> = ({
                     </svg>
                   </button>
                   <button
-                    onClick={() => onDelete(request.id)}
+                    type="button"
+                    onClick={(e) => { e.stopPropagation(); onDuplicate(request); }}
+                    className="p-2 text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all"
+                    title="Duplicar"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2" />
+                    </svg>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={(e) => { 
+                      e.preventDefault();
+                      e.stopPropagation(); 
+                      if (request.id) {
+                        onDelete(request.id);
+                      }
+                    }}
                     className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-all"
                     title="Excluir"
                   >
@@ -83,17 +115,27 @@ const TransportTable: React.FC<TransportTableProps> = ({
                   </button>
                 </div>
               </td>
-              {FIELDS.map((field) => (
-                <td key={field.id} className="px-4 py-4 text-xs font-semibold text-gray-700 whitespace-nowrap border-r border-gray-50 text-center">
-                  {request[field.id] || '-'}
-                </td>
-              ))}
+              {visibleFieldsWithIndices.map(({ field, label }) => {
+                let value = request[field.id] || '-';
+                
+                // Formatar data na visualização da tabela
+                if (label.includes('Data')) {
+                  value = formatDateBR(value as string);
+                }
+
+                return (
+                  <td key={field.id} className="px-4 py-4 text-xs font-semibold text-gray-700 whitespace-nowrap border-r border-gray-50 text-center">
+                    {value}
+                  </td>
+                );
+              })}
             </tr>
           ))}
           
           <tr className="bg-slate-50">
             <td className="px-4 py-6 sticky left-0 z-10 border-r border-slate-200 bg-slate-100 flex justify-center items-center">
                <button
+                type="button"
                 onClick={onAddNew}
                 className="flex items-center gap-2 text-[#001f54] hover:text-blue-800 font-black text-[10px] uppercase bg-white px-3 py-1.5 rounded-full shadow-sm border border-slate-200"
               >
@@ -103,9 +145,7 @@ const TransportTable: React.FC<TransportTableProps> = ({
                 ADICIONAR
               </button>
             </td>
-            <td colSpan={FIELDS.length} className="px-8 py-6 italic text-slate-400 text-[11px] font-bold uppercase tracking-widest text-center">
-              Fim da lista de registros • Estrutura sincronizada (Linha 9 até Row {requests.length + 8})
-            </td>
+            <td colSpan={visibleFieldsWithIndices.length} className="px-8 py-6"></td>
           </tr>
         </tbody>
       </table>
