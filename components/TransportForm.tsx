@@ -117,8 +117,9 @@ const TransportForm: React.FC<TransportFormProps> = ({
     if (index === 5) helpText = "CASO NÃO ENCONTRE O SETOR, SELECIONE OUTROS";
     if (index === 9) helpText = "EX: 10 À 15 DE JANEIRO OU 10 DE JANEIRO";
     if (index === 16 || index === 25) helpText = "EX: INFORMAR NOME DA ESCOLA, HOTEL, POSTO, ETC.";
-    if (index === 27) helpText = "MÉDIA DA CAPACIDADE DO ÔNIBUS É DE 46 LUGARES";
     if (index === 30) helpText = "RESPONSÁVEL POR FALAR DIRETAMENTE COM O MOTORISTA";
+
+    const isRequired = field.required && !isDisabled;
 
     const commonClasses = `w-full px-3 py-2.5 border rounded-lg focus:ring-2 focus:ring-sky-500 outline-none text-sm shadow-sm transition-all font-normal uppercase ${
       isDisabled 
@@ -130,13 +131,14 @@ const TransportForm: React.FC<TransportFormProps> = ({
       <div className={`flex flex-col gap-1 col-span-${colSpan}`}>
         <label className={`text-sm font-bold flex items-center ${isDisabled ? 'text-gray-400' : 'text-[#334155]'}`}>
           {field.label}
-          {field.required && !isDisabled && <span className="text-red-500 ml-1 font-bold">*</span>}
+          {isRequired && <span className="text-red-500 ml-1 font-bold">*</span>}
         </label>
         
         {isSelect ? (
           <div className="relative">
             <select
               disabled={isDisabled}
+              required={isRequired}
               value={formData[field.id] || ''}
               onChange={(e) => handleFieldChange(field.id, e.target.value)}
               className={`${commonClasses} appearance-none`}
@@ -157,6 +159,7 @@ const TransportForm: React.FC<TransportFormProps> = ({
         ) : isTextArea ? (
           <textarea
             disabled={isDisabled}
+            required={isRequired}
             value={formData[field.id] || ''}
             onChange={(e) => handleFieldChange(field.id, e.target.value)}
             className={`${commonClasses} min-h-[80px] resize-none`}
@@ -165,6 +168,7 @@ const TransportForm: React.FC<TransportFormProps> = ({
         ) : (
           <input
             disabled={isDisabled}
+            required={isRequired}
             type={field.type === 'email' ? 'text' : field.type}
             value={formData[field.id] || ''}
             onChange={(e) => handleFieldChange(field.id, e.target.value)}

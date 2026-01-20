@@ -96,6 +96,8 @@ export const FIELDS: FieldDefinition[] = FIELD_LABELS.map((label, index) => {
     label: label,
     placeholder: ``,
     type: type,
-    required: [0, 1, 2, 3, 11, 13, 15, 16, 24, 25, 27, 30, 31].includes(index)
+    // Deixa obrigatório todos os campos exceto:
+    // 3: E-mail, 4: Executiva, 5: Setor, 6: Outros, 12: Data Retorno, 14: Hora Retorno, 18-23: Paradas, 32: Complementares
+    required: ![3, 4, 5, 6, 12, 14, 18, 19, 20, 21, 22, 23, 32].includes(index)
   };
 });
