@@ -297,10 +297,8 @@ const App: React.FC = () => {
         </div>
       )}
 
-      <footer className="bg-[#001f54] h-16 md:h-24 w-full border-t border-white/10 flex items-center justify-center">
-        <div className="text-white/40 text-[10px] font-bold uppercase tracking-widest">
-          Secretaria de Educação • Governo de Pernambuco
-        </div>
+      <footer className="bg-[#001f54] h-12 md:h-16 w-full border-t border-white/10 flex items-center justify-center">
+        {/* Mensagem institucional removida conforme solicitado */}
       </footer>
       <style>{`
         .custom-scrollbar::-webkit-scrollbar { width: 10px; }

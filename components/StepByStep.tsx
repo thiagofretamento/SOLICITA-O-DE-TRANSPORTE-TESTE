@@ -167,10 +167,8 @@ const StepByStep: React.FC<StepByStepProps> = ({ isOpen, onClose }) => {
             </div>
           ))}
           
-          <div className="pt-8 pb-4 text-center border-t border-slate-200 mt-4">
-            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">
-              Secretaria de Educação • Governo de Pernambuco
-            </p>
+          <div className="pt-8 pb-4 border-t border-slate-200 mt-4">
+             {/* Mensagem institucional removida conforme solicitado */}
           </div>
         </div>
       </div>
