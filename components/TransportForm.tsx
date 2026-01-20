@@ -117,6 +117,7 @@ const TransportForm: React.FC<TransportFormProps> = ({
     if (index === 5) helpText = "CASO NÃO ENCONTRE O SETOR, SELECIONE OUTROS";
     if (index === 9) helpText = "EX: 10 À 15 DE JANEIRO OU 10 DE JANEIRO";
     if (index === 16 || index === 25) helpText = "EX: INFORMAR NOME DA ESCOLA, HOTEL, POSTO, ETC.";
+    if (index === 27) helpText = "MÉDIA DA CAPACIDADE DO ÔNIBUS É DE 46 LUGARES";
     if (index === 30) helpText = "RESPONSÁVEL POR FALAR DIRETAMENTE COM O MOTORISTA";
 
     const commonClasses = `w-full px-3 py-2.5 border rounded-lg focus:ring-2 focus:ring-sky-500 outline-none text-sm shadow-sm transition-all font-normal uppercase ${

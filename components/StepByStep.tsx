@@ -65,7 +65,7 @@ const steps = [
   },
   { 
     title: "15. HORÁRIO DE RETORNO", 
-    desc: "Informe o horário previsto para o retorno do veículo." 
+    desc: "Informe o horário previsto para o retorno do veículo.\n(campo disponível apenas para a modalidade Ida + Volta)" 
   },
   { 
     title: "16. CIDADE DE ORIGEM", 
@@ -97,7 +97,7 @@ const steps = [
   },
   { 
     title: "23. TOTAL DE PASSAGEIROS", 
-    desc: "Informe a quantidade total de passageiros. Ressalta-se que a capacidade média do ônibus é de 44 lugares." 
+    desc: "Informe a quantidade total de passageiros. Ressalta-se que a capacidade média do ônibus é de 46 lugares." 
   },
   { 
     title: "24. MODALIDADE DA VIAGEM", 
