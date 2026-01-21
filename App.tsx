@@ -127,24 +127,31 @@ const App: React.FC = () => {
       });
     });
 
-    // AJUSTE AUTOMÁTICO DE COLUNAS (APRIMORADO)
-    if (worksheet.columns) {
-      worksheet.columns.forEach((column, i) => {
-        if (i >= totalCols) return;
-        let maxLength = 0;
-        column.eachCell({ includeEmpty: true }, (cell) => {
-          // Explicitly convert cell.row to number to fix comparison errors with string vs number
-          const rowNum = Number(cell.row);
-          if (rowNum < 8) return; // Ignora o banner mas inclui o cabeçalho (linha 8)
-          
-          const columnValue = cell.value ? cell.value.toString() : '';
-          // Considera que textos em negrito (header) ocupam mais espaço
-          const cellLength = rowNum === 8 ? columnValue.length * 1.2 : columnValue.length;
-          maxLength = Math.max(maxLength, cellLength);
-        });
-        // Largura mínima de 15, máxima de 100, com margem de segurança de 5
-        column.width = Math.min(100, Math.max(15, maxLength + 5));
+    // AJUSTE AUTOMÁTICO DE COLUNAS (AUTOFIT REALISTA)
+    for (let i = 1; i <= totalCols; i++) {
+      const column = worksheet.getColumn(i);
+      let maxColumnWidth = 0;
+
+      column.eachCell({ includeEmpty: true }, (cell) => {
+        const rowNum = Number(cell.row);
+        if (rowNum < 8) return; // Ignora apenas o banner
+
+        let cellContentWidth = 0;
+        if (cell.value) {
+          const content = cell.value.toString();
+          // Fator 1.4 para negrito (header) e 1.15 para texto normal
+          const scaleFactor = rowNum === 8 ? 1.4 : 1.15;
+          cellContentWidth = content.length * scaleFactor;
+        }
+        
+        if (cellContentWidth > maxColumnWidth) {
+          maxColumnWidth = cellContentWidth;
+        }
       });
+
+      // Define largura mínima de 15 e adiciona um buffer de 4 unidades para segurança
+      // Removido o limite superior de 100 para garantir que textos gigantes fiquem visíveis
+      column.width = Math.max(15, maxColumnWidth + 4);
     }
 
     const sanitizedPeriod = (requests[0]?.col_9 || 'GERAL').replace(/[\\/:*?"<>|]/g, '-');
