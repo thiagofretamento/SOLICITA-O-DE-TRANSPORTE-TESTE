@@ -59,11 +59,9 @@ const App: React.FC = () => {
     e.preventDefault();
     
     if (editingId) {
-      // UPDATE
       setRequests(prev => prev.map(r => r.id === editingId ? { ...formData, id: editingId } as TransportRequest : r));
       setEditingId(null);
     } else {
-      // CREATE
       const newRequest: TransportRequest = {
         ...formData,
         id: generateId(),
@@ -115,7 +113,6 @@ const App: React.FC = () => {
     const worksheet = workbook.addWorksheet('Solicitações');
     worksheet.views = [{ showGridLines: false }];
     
-    // Banner Superior - Ajustado para cobrir todas as colunas dinamicamente
     const totalCols = FIELD_LABELS.length;
     const lastColLetter = worksheet.getColumn(totalCols).letter;
     worksheet.mergeCells(`A1:${lastColLetter}6`);
@@ -127,11 +124,9 @@ const App: React.FC = () => {
         { text: '\n  Solicitação de Transporte (Fretamento)', font: { bold: true, size: 18, color: { argb: 'FFFFFFFF' }, name: 'Arial' } }
       ]
     };
-    bannerCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF001F54' } };
-    // Alinhamento ajustado para vertical: MEIO (middle) e horizontal: ESQUERDA (left)
+    bannerCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF001F54' } } as any;
     bannerCell.alignment = { vertical: 'middle', horizontal: 'left', wrapText: true };
 
-    // Cabeçalho (Linha 8)
     const headerRow = worksheet.getRow(8);
     headerRow.height = 35;
     FIELD_LABELS.forEach((label, index) => {
@@ -139,13 +134,12 @@ const App: React.FC = () => {
       cell.value = label;
       let bgColor = 'FFD3D3D3';
       if (label === 'Caso o Setor for Outros, Informe Aqui' || label.startsWith('PARADA')) bgColor = 'FFFFFF00';
-      cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: bgColor } };
+      cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: bgColor } } as any;
       cell.font = { bold: true, size: 10, name: 'Arial' };
       cell.border = { top: { style: 'thin' }, left: { style: 'thin' }, bottom: { style: 'thin' }, right: { style: 'thin' } };
       cell.alignment = { horizontal: 'center', vertical: 'middle' };
     });
 
-    // Dados (Linha 9+)
     requests.forEach((req, idx) => {
       const row = worksheet.getRow(idx + 9);
       FIELDS.forEach((field, fIdx) => {
@@ -161,19 +155,20 @@ const App: React.FC = () => {
       });
     });
 
-    // Ajuste automático de largura de colunas (Auto-fit)
     worksheet.columns.forEach((column) => {
       let maxLength = 0;
       column.eachCell({ includeEmpty: true }, (cell) => {
+        if (cell.row < 7) return; // Ignora o banner
         const columnValue = cell.value ? cell.value.toString() : '';
         maxLength = Math.max(maxLength, columnValue.length);
       });
-      // Adiciona uma pequena margem para não ficar colado na borda
-      column.width = maxLength < 10 ? 12 : maxLength + 5;
+      column.width = Math.min(60, Math.max(12, maxLength + 6));
     });
 
-    const firstPeriod = requests[0]?.col_9 || 'GERAL';
-    const fileName = `Solicitação de Transporte - ${firstPeriod.toUpperCase()}.xlsx`;
+    const firstPeriodRaw = requests[0]?.col_9 || 'GERAL';
+    // Saneamento: remove caracteres proibidos em nomes de arquivos como / \ : * ? " < > |
+    const sanitizedPeriod = firstPeriodRaw.replace(/[\\/:*?"<>|]/g, '-');
+    const fileName = `Solicitação de Transporte - ${sanitizedPeriod.toUpperCase()}.xlsx`;
 
     const buffer = await workbook.xlsx.writeBuffer();
     const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
@@ -232,7 +227,7 @@ const App: React.FC = () => {
       <StepByStep isOpen={showManual} onClose={() => setShowManual(false)} />
 
       {idToDelete && (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4" role="dialog" aria-modal="true">
           <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onClick={() => setIdToDelete(null)} />
           <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
             <div className="p-8 text-center">
@@ -253,7 +248,7 @@ const App: React.FC = () => {
       )}
 
       {showForm && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4" role="dialog" aria-modal="true">
           <div className="absolute inset-0 bg-[#001f54]/60 backdrop-blur-sm" onClick={handleCancel} />
           <div className="relative w-full max-w-6xl h-full max-h-[90vh] bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col">
             <div className="bg-gray-50 px-8 py-5 border-b flex justify-between items-center">
