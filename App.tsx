@@ -15,13 +15,11 @@ const generateId = () => {
   return Math.random().toString(36).substring(2, 15) + Date.now().toString(36);
 };
 
-// Função para formatar ISO (YYYY-MM-DD) para BR (DD/MM/YYYY) para o Excel
 const formatDateBR = (dateStr: string) => {
   if (!dateStr || dateStr === '-' || !dateStr.includes('-')) return dateStr;
   const parts = dateStr.split('-');
   if (parts.length !== 3) return dateStr;
   const [year, month, day] = parts;
-  if (!year || !month || !day) return dateStr;
   return `${day}/${month}/${year}`;
 };
 
@@ -33,20 +31,17 @@ const App: React.FC = () => {
   const [formData, setFormData] = useState<Partial<TransportRequest>>({});
   const [idToDelete, setIdToDelete] = useState<string | null>(null);
 
-  // Carrega dados do LocalStorage ao iniciar
   useEffect(() => {
     const saved = localStorage.getItem('transport_requests_v2');
     if (saved) {
       try {
         setRequests(JSON.parse(saved));
       } catch (e) {
-        console.error("Erro ao carregar dados locais", e);
         setRequests([]);
       }
     }
   }, []);
 
-  // Salva no LocalStorage sempre que a lista mudar
   useEffect(() => {
     localStorage.setItem('transport_requests_v2', JSON.stringify(requests));
   }, [requests]);
@@ -57,18 +52,12 @@ const App: React.FC = () => {
 
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
-    
     if (editingId) {
       setRequests(prev => prev.map(r => r.id === editingId ? { ...formData, id: editingId } as TransportRequest : r));
       setEditingId(null);
     } else {
-      const newRequest: TransportRequest = {
-        ...formData,
-        id: generateId(),
-      } as TransportRequest;
-      setRequests(prev => [...prev, newRequest]);
+      setRequests(prev => [...prev, { ...formData, id: generateId() } as TransportRequest]);
     }
-    
     setFormData({});
     setShowForm(false);
   };
@@ -81,11 +70,7 @@ const App: React.FC = () => {
   };
 
   const handleDuplicate = (request: TransportRequest) => {
-    const duplicated: TransportRequest = {
-      ...request,
-      id: generateId()
-    };
-    setRequests(prev => [...prev, duplicated]);
+    setRequests(prev => [...prev, { ...request, id: generateId() }]);
   };
 
   const handleEdit = (request: TransportRequest) => {
@@ -94,24 +79,11 @@ const App: React.FC = () => {
     setShowForm(true);
   };
 
-  const handleAddNew = () => {
-    setEditingId(null);
-    setFormData({});
-    setShowForm(true);
-  };
-
-  const handleCancel = () => {
-    setShowForm(false);
-    setEditingId(null);
-    setFormData({});
-  };
-
   const handleExportExcel = async () => {
     if (requests.length === 0) return;
 
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet('Solicitações');
-    worksheet.views = [{ showGridLines: false }];
     
     const totalCols = FIELD_LABELS.length;
     const lastColLetter = worksheet.getColumn(totalCols).letter;
@@ -124,7 +96,7 @@ const App: React.FC = () => {
         { text: '\n  Solicitação de Transporte (Fretamento)', font: { bold: true, size: 18, color: { argb: 'FFFFFFFF' }, name: 'Arial' } }
       ]
     };
-    bannerCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF001F54' } } as any;
+    bannerCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF001F54' } };
     bannerCell.alignment = { vertical: 'middle', horizontal: 'left', wrapText: true };
 
     const headerRow = worksheet.getRow(8);
@@ -132,9 +104,8 @@ const App: React.FC = () => {
     FIELD_LABELS.forEach((label, index) => {
       const cell = headerRow.getCell(index + 1);
       cell.value = label;
-      let bgColor = 'FFD3D3D3';
-      if (label === 'Caso o Setor for Outros, Informe Aqui' || label.startsWith('PARADA')) bgColor = 'FFFFFF00';
-      cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: bgColor } } as any;
+      const bgColor = (label === 'Caso o Setor for Outros, Informe Aqui' || label.startsWith('PARADA')) ? 'FFFFFF00' : 'FFD3D3D3';
+      cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: bgColor } };
       cell.font = { bold: true, size: 10, name: 'Arial' };
       cell.border = { top: { style: 'thin' }, left: { style: 'thin' }, bottom: { style: 'thin' }, right: { style: 'thin' } };
       cell.alignment = { horizontal: 'center', vertical: 'middle' };
@@ -145,9 +116,7 @@ const App: React.FC = () => {
       FIELDS.forEach((field, fIdx) => {
         const cell = row.getCell(fIdx + 1);
         let value = req[field.id] || '';
-        if (field.label.includes('Data')) {
-          value = formatDateBR(value);
-        }
+        if (field.label.includes('Data')) value = formatDateBR(value);
         cell.value = value || '-';
         cell.border = { top: { style: 'thin' }, left: { style: 'thin' }, bottom: { style: 'thin' }, right: { style: 'thin' } };
         cell.font = { size: 10, name: 'Arial' };
@@ -155,19 +124,18 @@ const App: React.FC = () => {
       });
     });
 
-    worksheet.columns.forEach((column) => {
+    worksheet.columns.forEach((column, i) => {
+      if (i >= totalCols) return;
       let maxLength = 0;
       column.eachCell({ includeEmpty: true }, (cell) => {
-        if (cell.row < 7) return; // Ignora o banner
+        if (cell.row < 7) return;
         const columnValue = cell.value ? cell.value.toString() : '';
         maxLength = Math.max(maxLength, columnValue.length);
       });
       column.width = Math.min(60, Math.max(12, maxLength + 6));
     });
 
-    const firstPeriodRaw = requests[0]?.col_9 || 'GERAL';
-    // Saneamento: remove caracteres proibidos em nomes de arquivos como / \ : * ? " < > |
-    const sanitizedPeriod = firstPeriodRaw.replace(/[\\/:*?"<>|]/g, '-');
+    const sanitizedPeriod = (requests[0]?.col_9 || 'GERAL').replace(/[\\/:*?"<>|]/g, '-');
     const fileName = `Solicitação de Transporte - ${sanitizedPeriod.toUpperCase()}.xlsx`;
 
     const buffer = await workbook.xlsx.writeBuffer();
@@ -191,20 +159,13 @@ const App: React.FC = () => {
             GERENCIAMENTO LOCAL
           </h2>
           <div className="flex gap-3 w-full md:w-auto">
-            <button 
-              onClick={handleAddNew} 
-              className="flex-1 md:flex-none bg-[#001f54] hover:bg-[#002d7a] text-white px-8 py-3 rounded-lg font-bold shadow-xl transition-all flex items-center justify-center gap-2 transform hover:scale-105"
-            >
+            <button onClick={() => { setEditingId(null); setFormData({}); setShowForm(true); }} className="flex-1 md:flex-none bg-[#001f54] hover:bg-[#002d7a] text-white px-8 py-3 rounded-lg font-bold shadow-xl transition-all flex items-center justify-center gap-2 transform hover:scale-105">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                 <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 011-1z" clipRule="evenodd" />
               </svg>
               NOVA SOLICITAÇÃO
             </button>
-            <button 
-              onClick={handleExportExcel} 
-              disabled={requests.length === 0} 
-              className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-3 rounded-lg font-bold transition-all shadow-lg ${requests.length === 0 ? 'bg-gray-300 text-gray-500 cursor-not-allowed' : 'bg-green-600 hover:bg-green-700 text-white transform hover:scale-105'}`}
-            >
+            <button onClick={handleExportExcel} disabled={requests.length === 0} className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-3 rounded-lg font-bold transition-all shadow-lg ${requests.length === 0 ? 'bg-gray-300 text-gray-500 cursor-not-allowed' : 'bg-green-600 hover:bg-green-700 text-white transform hover:scale-105'}`}>
               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M4 16v1a2 2 0 002 2h12a2 2 0 002-2v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
               </svg>
@@ -214,13 +175,7 @@ const App: React.FC = () => {
         </div>
 
         <div className="bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden mb-12">
-          <TransportTable 
-            requests={requests} 
-            onEdit={handleEdit} 
-            onDelete={(id) => setIdToDelete(id)} 
-            onDuplicate={handleDuplicate} 
-            onAddNew={handleAddNew} 
-          />
+          <TransportTable requests={requests} onEdit={handleEdit} onDelete={setIdToDelete} onDuplicate={handleDuplicate} onAddNew={() => setShowForm(true)} />
         </div>
       </main>
 
@@ -237,7 +192,7 @@ const App: React.FC = () => {
                 </svg>
               </div>
               <h3 className="text-xl font-bold text-slate-900 mb-2">Confirmar Exclusão</h3>
-              <p className="text-slate-500">Deseja realmente excluir esta solicitação permanentemente?</p>
+              <p className="text-slate-500">Deseja realmente excluir esta solicitação?</p>
             </div>
             <div className="flex border-t border-slate-100">
               <button onClick={() => setIdToDelete(null)} className="flex-1 px-6 py-4 font-bold text-slate-500 hover:bg-slate-50 transition-colors border-r">Cancelar</button>
@@ -249,14 +204,14 @@ const App: React.FC = () => {
 
       {showForm && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4" role="dialog" aria-modal="true">
-          <div className="absolute inset-0 bg-[#001f54]/60 backdrop-blur-sm" onClick={handleCancel} />
+          <div className="absolute inset-0 bg-[#001f54]/60 backdrop-blur-sm" onClick={() => setShowForm(false)} />
           <div className="relative w-full max-w-6xl h-full max-h-[90vh] bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col">
             <div className="bg-gray-50 px-8 py-5 border-b flex justify-between items-center">
-              <h3 className="font-black text-gray-500 uppercase tracking-widest">{!!editingId ? 'Editar Solicitação' : 'Nova Solicitação'}</h3>
-              <button onClick={handleCancel} className="p-2 text-gray-400 hover:text-red-500"><svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" /></svg></button>
+              <h3 className="font-black text-gray-500 uppercase tracking-widest">{editingId ? 'Editar Solicitação' : 'Nova Solicitação'}</h3>
+              <button onClick={() => setShowForm(false)} className="p-2 text-gray-400 hover:text-red-500"><svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" /></svg></button>
             </div>
             <div className="flex-grow overflow-y-auto p-8 custom-scrollbar">
-              <TransportForm formData={formData} onChange={handleInputChange} onSave={handleSave} onCancel={handleCancel} isEditing={!!editingId} />
+              <TransportForm formData={formData} onChange={handleInputChange} onSave={handleSave} onCancel={() => setShowForm(false)} isEditing={!!editingId} />
             </div>
           </div>
         </div>
