@@ -150,7 +150,6 @@ const App: React.FC = () => {
       });
 
       // Define largura mínima de 15 e adiciona um buffer de 4 unidades para segurança
-      // Removido o limite superior de 100 para garantir que textos gigantes fiquem visíveis
       column.width = Math.max(15, maxColumnWidth + 4);
     }
 
@@ -190,6 +189,21 @@ const App: React.FC = () => {
               </svg>
               BAIXAR EXCEL
             </button>
+          </div>
+        </div>
+
+        {/* CONTADOR DE SOLICITAÇÕES */}
+        <div className="mb-4 flex items-center gap-3 bg-white p-4 rounded-xl border border-slate-200 shadow-sm w-fit animate-in fade-in slide-in-from-left-4 duration-500">
+          <div className="bg-[#001f54] text-yellow-400 p-2 rounded-lg">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+          </div>
+          <div>
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Total de Solicitações</p>
+            <p className="text-xl font-black text-[#001f54] leading-none">
+              {requests.length.toString().padStart(2, '0')} <span className="text-sm font-bold text-slate-500 uppercase tracking-tighter">Registros</span>
+            </p>
           </div>
         </div>
 
