@@ -85,6 +85,9 @@ const App: React.FC = () => {
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet('Solicitações');
     
+    // REMOVER LINHAS DE GRADE
+    worksheet.views = [{ showGridLines: false }];
+    
     const totalCols = FIELD_LABELS.length;
     const lastColLetter = worksheet.getColumn(totalCols).letter;
     worksheet.mergeCells(`A1:${lastColLetter}6`);
@@ -124,16 +127,25 @@ const App: React.FC = () => {
       });
     });
 
-    worksheet.columns.forEach((column, i) => {
-      if (i >= totalCols) return;
-      let maxLength = 0;
-      column.eachCell({ includeEmpty: true }, (cell) => {
-        if (cell.row < 7) return;
-        const columnValue = cell.value ? cell.value.toString() : '';
-        maxLength = Math.max(maxLength, columnValue.length);
+    // AJUSTE AUTOMÁTICO DE COLUNAS (APRIMORADO)
+    if (worksheet.columns) {
+      worksheet.columns.forEach((column, i) => {
+        if (i >= totalCols) return;
+        let maxLength = 0;
+        column.eachCell({ includeEmpty: true }, (cell) => {
+          // Explicitly convert cell.row to number to fix comparison errors with string vs number
+          const rowNum = Number(cell.row);
+          if (rowNum < 8) return; // Ignora o banner mas inclui o cabeçalho (linha 8)
+          
+          const columnValue = cell.value ? cell.value.toString() : '';
+          // Considera que textos em negrito (header) ocupam mais espaço
+          const cellLength = rowNum === 8 ? columnValue.length * 1.2 : columnValue.length;
+          maxLength = Math.max(maxLength, cellLength);
+        });
+        // Largura mínima de 15, máxima de 100, com margem de segurança de 5
+        column.width = Math.min(100, Math.max(15, maxLength + 5));
       });
-      column.width = Math.min(60, Math.max(12, maxLength + 6));
-    });
+    }
 
     const sanitizedPeriod = (requests[0]?.col_9 || 'GERAL').replace(/[\\/:*?"<>|]/g, '-');
     const fileName = `Solicitação de Transporte - ${sanitizedPeriod.toUpperCase()}.xlsx`;
