@@ -37,7 +37,7 @@ const TransportTable: React.FC<Props> = ({ requests, onEdit, onDelete, onDuplica
             <th className="px-6 py-4 text-[11px] font-bold text-slate-400 uppercase tracking-widest">Evento</th>
             <th className="px-6 py-4 text-[11px] font-bold text-slate-400 uppercase tracking-widest">Data Saída</th>
             <th className="px-6 py-4 text-[11px] font-bold text-slate-400 uppercase tracking-widest">Origem/Destino</th>
-            <th className="px-6 py-4 text-[11px] font-bold text-slate-400 uppercase tracking-widest text-center">Passag.</th>
+            <th className="px-6 py-4 text-[11px] font-bold text-slate-400 uppercase tracking-widest text-center">Passag..</th>
             <th className="px-6 py-4 text-[11px] font-bold text-slate-400 uppercase tracking-widest text-right">Ações</th>
           </tr>
         </thead>
