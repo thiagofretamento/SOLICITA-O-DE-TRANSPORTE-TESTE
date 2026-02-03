@@ -1,5 +1,5 @@
 {
-  "name": "Fretamento Getra Dashboard",
-  "description": "A professional and modern dashboard for transport charter management, featuring operational and financial KPIs, real-time data integration, and responsive design.",
+  "name": "Sistema de Gestão de Fretamento",
+  "description": "Uma plataforma robusta para cadastro e gerenciamento de solicitações de transporte, estruturada para sincronização total com planilhas, apresentando formulários dinâmicos e interface de dados de alta densidade.",
   "requestFramePermissions": []
 }
