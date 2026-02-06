@@ -21,7 +21,7 @@ const Header: React.FC<HeaderProps> = ({ onOpenManual, onOpenPassengerList }) =>
           <div className="flex items-center gap-3">
             <span className="w-1 h-6 bg-yellow-400 rounded-full hidden md:block"></span>
             <h1 className="text-lg md:text-xl lg:text-2xl font-black tracking-tight text-white uppercase leading-tight text-center lg:text-left">
-              SOLICITAÇÃO DE TRANSPORTE - FRETAMENTO
+              GETRA - FRETAMENTO
             </h1>
           </div>
 
